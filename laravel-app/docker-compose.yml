@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./src                # ← Laravel nằm trong ./src
+      dockerfile: ../php/Dockerfile # ← Dockerfile nằm ở php/
+    container_name: laravel_app
+    restart: always                # ✅ tự khởi động cùng hệ thống
+    volumes:
+      - ./src:/var/www             # ← Laravel mount vào /var/www
+    depends_on:
+      - db
+      - redis
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_server
+    restart: always                # ✅ tự khởi động luôn
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  db:
+    image: mariadb:10.6
+    container_name: mariadb_db
+    restart: always                # ✅ auto restart
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+
+  redis:
+    image: redis:alpine
+    container_name: redis_cache
+    restart: always                # ✅ restart redis luôn
